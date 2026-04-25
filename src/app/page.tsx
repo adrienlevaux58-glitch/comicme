@@ -1,4 +1,35 @@
+"use client";
+import { useState } from "react";
+
 export default function Home() {
+  const [description, setDescription] = useState("");
+  const [style, setStyle] = useState("Manga");
+  const [mood, setMood] = useState("Funny");
+  const [loading, setLoading] = useState(false);
+  const [panels, setPanels] = useState<{ panels: { image: string; bubble: string }[] } | null>(null);
+  const [error, setError] = useState("");
+
+  const handleGenerate = async () => {
+    if (!description.trim()) return;
+    setLoading(true);
+    setError("");
+    setPanels(null);
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description, style, mood })
+      });
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      setPanels(data);
+    } catch (e) {
+      setError("Generation failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <style>{`
@@ -11,8 +42,10 @@ export default function Home() {
                             repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,0,0,0.05) 39px, rgba(0,0,0,0.05) 40px);
           min-height: 100vh;
         }
-        .generate-btn:hover { box-shadow: 2px 2px 0 #111 !important; transform: translate(3px, 3px) !important; }
+        .btn:hover { box-shadow: 2px 2px 0 #111 !important; transform: translate(3px, 3px) !important; }
         .feature-card:hover { transform: translate(-2px, -2px) !important; box-shadow: 6px 6px 0 #111 !important; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { animation: spin 1s linear infinite; display: inline-block; }
       `}</style>
 
       <div style={{ maxWidth: "900px", margin: "0 auto", padding: "40px 24px" }}>
@@ -24,7 +57,7 @@ export default function Home() {
           </div>
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <div style={{ background: "#FF3A3A", color: "white", fontFamily: "'Bangers', cursive", fontSize: "14px", letterSpacing: "1px", padding: "6px 14px", border: "3px solid #111", borderRadius: "4px", boxShadow: "3px 3px 0 #111", transform: "rotate(-2deg)" }}>FREE BETA</div>
-            <button className="generate-btn" style={{ background: "#FFD700", border: "4px solid #111", borderRadius: "6px", padding: "10px 20px", fontFamily: "'Bangers', cursive", fontSize: "15px", letterSpacing: "2px", color: "#111", cursor: "pointer", boxShadow: "5px 5px 0 #111", transition: "all 0.1s" }}>Sign In</button>
+            <button className="btn" style={{ background: "#FFD700", border: "4px solid #111", borderRadius: "6px", padding: "10px 20px", fontFamily: "'Bangers', cursive", fontSize: "15px", letterSpacing: "2px", color: "#111", cursor: "pointer", boxShadow: "5px 5px 0 #111", transition: "all 0.1s" }}>Sign In</button>
           </div>
         </header>
 
@@ -42,42 +75,27 @@ export default function Home() {
             <div style={{ display: "inline-block", background: "#FFD700", border: "3px solid #111", padding: "8px 16px", fontFamily: "'Bangers', cursive", fontSize: "16px", letterSpacing: "1px", color: "#111", boxShadow: "3px 3px 0 #111", transform: "rotate(1deg)", marginBottom: "16px" }}>
               ⚡ No skills required
             </div>
-            <div>
-              <button className="generate-btn" style={{ width: "100%", background: "#FFD700", border: "4px solid #111", borderRadius: "6px", padding: "16px 24px", fontFamily: "'Bangers', cursive", fontSize: "22px", letterSpacing: "2px", color: "#111", cursor: "pointer", boxShadow: "5px 5px 0 #111", transition: "all 0.1s" }}>
-                TRY FOR FREE →
-              </button>
-            </div>
-            <div style={{ marginTop: "10px", fontSize: "13px", fontWeight: "700", color: "#888", textAlign: "center" }}>
-              3 free generations · No credit card needed
-            </div>
           </div>
 
-          {/* REAL AI PANELS */}
+          {/* PANELS PREVIEW */}
           <div>
             <div style={{ border: "4px solid #111", padding: "8px", background: "#111", boxShadow: "8px 8px 0 #FFD700" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px" }}>
                 <div style={{ position: "relative" }}>
-  <img src="/panel-before.png" alt="Before" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block", border: "2px solid #111" }} />
-  <div style={{ position: "absolute", top: "8px", left: "8px", background: "white", border: "2px solid #111", borderRadius: "10px", padding: "4px 8px", fontFamily: "'Bangers', cursive", fontSize: "11px", letterSpacing: "1px", boxShadow: "2px 2px 0 #111" }}>
-    Zzz...
-  </div>
-  <div style={{ position: "absolute", bottom: "6px", left: "6px", background: "#FFD700", border: "2px solid #111", fontFamily: "'Bangers', cursive", fontSize: "12px", padding: "2px 8px", letterSpacing: "1px" }}>BEFORE</div>
-</div>
-<div style={{ position: "relative" }}>
-  <img src="/panel-during.png" alt="During" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block", border: "2px solid #111" }} />
-  <div style={{ position: "absolute", top: "8px", right: "8px", background: "white", border: "2px solid #111", borderRadius: "10px", padding: "4px 8px", fontFamily: "'Bangers', cursive", fontSize: "11px", letterSpacing: "1px", boxShadow: "2px 2px 0 #111" }}>
-    I'm late!!
-  </div>
-  <div style={{ position: "absolute", bottom: "6px", left: "6px", background: "#FF3A3A", border: "2px solid #111", fontFamily: "'Bangers', cursive", fontSize: "12px", padding: "2px 8px", letterSpacing: "1px", color: "white" }}>DURING</div>
-</div>
-   <div style={{ position: "relative", gridColumn: "1 / -1" }}>
-  <img src="/panel-after.png" alt="After" style={{ width: "100%", height: "160px", objectFit: "cover", objectPosition: "center top", display: "block", border: "2px solid #111" }} />
-  {/* Bulle dialogue */}
-  <div style={{ position: "absolute", top: "10px", right: "10px", background: "white", border: "2px solid #111", borderRadius: "12px", padding: "6px 10px", fontFamily: "'Bangers', cursive", fontSize: "13px", letterSpacing: "1px", maxWidth: "120px", textAlign: "center", boxShadow: "2px 2px 0 #111" }}>
-    NOOO!! Not again...
-  </div>
-  <div style={{ position: "absolute", bottom: "6px", left: "6px", background: "white", border: "2px solid #111", fontFamily: "'Bangers', cursive", fontSize: "12px", padding: "2px 8px", letterSpacing: "1px" }}>AFTER...</div>
-</div>
+                  <img src="/panel-before.png" alt="Before" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block", border: "2px solid #111" }} />
+                  <div style={{ position: "absolute", top: "8px", left: "8px", background: "white", border: "2px solid #111", borderRadius: "10px", padding: "4px 8px", fontFamily: "'Bangers', cursive", fontSize: "11px", letterSpacing: "1px", boxShadow: "2px 2px 0 #111" }}>Zzz...</div>
+                  <div style={{ position: "absolute", bottom: "6px", left: "6px", background: "#FFD700", border: "2px solid #111", fontFamily: "'Bangers', cursive", fontSize: "12px", padding: "2px 8px", letterSpacing: "1px" }}>BEFORE</div>
+                </div>
+                <div style={{ position: "relative" }}>
+                  <img src="/panel-during.png" alt="During" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block", border: "2px solid #111" }} />
+                  <div style={{ position: "absolute", top: "8px", right: "8px", background: "white", border: "2px solid #111", borderRadius: "10px", padding: "4px 8px", fontFamily: "'Bangers', cursive", fontSize: "11px", letterSpacing: "1px", boxShadow: "2px 2px 0 #111" }}>I'm late!!</div>
+                  <div style={{ position: "absolute", bottom: "6px", left: "6px", background: "#FF3A3A", border: "2px solid #111", fontFamily: "'Bangers', cursive", fontSize: "12px", padding: "2px 8px", letterSpacing: "1px", color: "white" }}>DURING</div>
+                </div>
+                <div style={{ position: "relative", gridColumn: "1 / -1" }}>
+                  <img src="/panel-after.png" alt="After" style={{ width: "100%", height: "160px", objectFit: "cover", objectPosition: "center top", display: "block", border: "2px solid #111" }} />
+                  <div style={{ position: "absolute", top: "10px", right: "10px", background: "white", border: "2px solid #111", borderRadius: "12px", padding: "6px 10px", fontFamily: "'Bangers', cursive", fontSize: "13px", letterSpacing: "1px", maxWidth: "120px", textAlign: "center", boxShadow: "2px 2px 0 #111" }}>NOOO!!</div>
+                  <div style={{ position: "absolute", bottom: "6px", left: "6px", background: "white", border: "2px solid #111", fontFamily: "'Bangers', cursive", fontSize: "12px", padding: "2px 8px", letterSpacing: "1px" }}>AFTER...</div>
+                </div>
               </div>
             </div>
             <div style={{ textAlign: "center", marginTop: "10px", fontFamily: "'Bangers', cursive", fontSize: "13px", letterSpacing: "1px", color: "#888" }}>
@@ -89,40 +107,114 @@ export default function Home() {
         {/* FORM */}
         <section style={{ background: "white", border: "4px solid #111", borderRadius: "8px", padding: "32px", boxShadow: "8px 8px 0 #111", marginBottom: "56px", position: "relative" }}>
           <div style={{ position: "absolute", top: "-16px", left: "24px", background: "#FF3A3A", color: "white", fontFamily: "'Bangers', cursive", fontSize: "16px", letterSpacing: "1px", padding: "4px 14px", border: "3px solid #111" }}>
-            NEW STORY!
+            YOUR STORY!
           </div>
           <label style={{ fontFamily: "'Bangers', cursive", fontSize: "20px", letterSpacing: "1px", color: "#111", display: "block", marginBottom: "12px" }}>
             Describe your moment ✍️
           </label>
           <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             style={{ width: "100%", border: "3px solid #111", borderRadius: "6px", padding: "16px", fontFamily: "'Comic Neue', cursive", fontSize: "15px", fontWeight: "700", color: "#111", resize: "none", height: "120px", background: "#fffdf5", outline: "none" }}
             placeholder="E.g: This morning I mixed up salt and sugar in my coffee, right in front of all my coworkers..."
           />
           <div style={{ display: "flex", gap: "12px", marginTop: "16px", alignItems: "center" }}>
-            <select style={{ border: "3px solid #111", borderRadius: "6px", padding: "12px 16px", fontFamily: "'Bangers', cursive", fontSize: "16px", background: "white", color: "#111", outline: "none", boxShadow: "3px 3px 0 #111" }}>
-              <option>🇯🇵 Manga</option>
-              <option>🦸 US Comics</option>
-              <option>🕴️ Stick Figure</option>
+            <select value={style} onChange={(e) => setStyle(e.target.value)} style={{ border: "3px solid #111", borderRadius: "6px", padding: "12px 16px", fontFamily: "'Bangers', cursive", fontSize: "16px", background: "white", color: "#111", outline: "none", boxShadow: "3px 3px 0 #111" }}>
+              <option>Manga</option>
+              <option>US Comics</option>
+              <option>Stick Figure</option>
             </select>
-            <select style={{ border: "3px solid #111", borderRadius: "6px", padding: "12px 16px", fontFamily: "'Bangers', cursive", fontSize: "16px", background: "white", color: "#111", outline: "none", boxShadow: "3px 3px 0 #111" }}>
-              <option>😂 Funny</option>
-              <option>😢 Dramatic</option>
-              <option>⚡ Epic</option>
+            <select value={mood} onChange={(e) => setMood(e.target.value)} style={{ border: "3px solid #111", borderRadius: "6px", padding: "12px 16px", fontFamily: "'Bangers', cursive", fontSize: "16px", background: "white", color: "#111", outline: "none", boxShadow: "3px 3px 0 #111" }}>
+              <option>Funny</option>
+              <option>Dramatic</option>
+              <option>Epic</option>
             </select>
-            <button className="generate-btn" style={{ flex: 1, background: "#FFD700", border: "4px solid #111", borderRadius: "6px", padding: "14px 24px", fontFamily: "'Bangers', cursive", fontSize: "22px", letterSpacing: "2px", color: "#111", cursor: "pointer", boxShadow: "5px 5px 0 #111", transition: "all 0.1s" }}>
-              GENERATE ✨
+            <button className="btn" onClick={handleGenerate} disabled={loading || !description.trim()} style={{ flex: 1, background: loading ? "#ccc" : "#FFD700", border: "4px solid #111", borderRadius: "6px", padding: "14px 24px", fontFamily: "'Bangers', cursive", fontSize: "22px", letterSpacing: "2px", color: "#111", cursor: loading ? "not-allowed" : "pointer", boxShadow: "5px 5px 0 #111", transition: "all 0.1s" }}>
+              {loading ? <span className="spinner">⚙️</span> : "GENERATE ✨"}
             </button>
           </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontFamily: "'Bangers', cursive", fontSize: "14px", letterSpacing: "1px", color: "#888" }}>CREDITS LEFT</span>
-              <div style={{ display: "flex", gap: "6px" }}>
-                {[1,2,3].map(i => <div key={i} style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid #111", background: "#FFD700" }} />)}
+          {error && <p style={{ color: "#FF3A3A", fontWeight: "700", marginTop: "12px" }}>{error}</p>}
+        </section>
+
+        {/* LOADING */}
+        {loading && (
+          <section style={{ textAlign: "center", padding: "40px", background: "white", border: "4px solid #111", borderRadius: "8px", boxShadow: "8px 8px 0 #111", marginBottom: "56px" }}>
+            <div style={{ fontFamily: "'Bangers', cursive", fontSize: "28px", letterSpacing: "2px", color: "#111", marginBottom: "12px" }}>
+              <span className="spinner">⚙️</span> GENERATING YOUR STORY...
+            </div>
+            <p style={{ fontWeight: "700", color: "#888" }}>This takes about 15 seconds ☕</p>
+          </section>
+        )}
+
+        {/* GENERATED PANELS — 6 cases format comics */}
+        {panels && (
+          <section style={{ marginBottom: "56px" }}>
+            <div style={{ textAlign: "center", marginBottom: "20px" }}>
+              <span style={{ fontFamily: "'Bangers', cursive", fontSize: "28px", letterSpacing: "2px", color: "#111", borderBottom: "4px solid #FFD700", paddingBottom: "4px" }}>YOUR COMIC STRIP! 🎉</span>
+            </div>
+            <div style={{ border: "4px solid #111", padding: "8px", background: "#111", boxShadow: "8px 8px 0 #FFD700" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gridTemplateRows: "220px 160px 160px", gap: "4px" }}>
+
+                {/* Panel 1 — grand gauche */}
+                <div style={{ position: "relative", gridRow: "1 / 2" }}>
+                  <img src={panels.panels[0].image} alt="Panel 1" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", border: "2px solid #111" }} />
+                  <div style={{ position: "absolute", top: "10px", left: "10px", background: "white", border: "2px solid #111", borderRadius: "12px", padding: "6px 10px", fontFamily: "'Bangers', cursive", fontSize: "13px", maxWidth: "150px", boxShadow: "2px 2px 0 #111" }}>
+                    {panels.panels[0].bubble}
+                  </div>
+                </div>
+
+                {/* Panel 2 — petit haut droite */}
+                <div style={{ position: "relative" }}>
+                  <img src={panels.panels[1].image} alt="Panel 2" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", border: "2px solid #111" }} />
+                  <div style={{ position: "absolute", top: "6px", right: "6px", background: "white", border: "2px solid #111", borderRadius: "10px", padding: "4px 8px", fontFamily: "'Bangers', cursive", fontSize: "11px", maxWidth: "110px", boxShadow: "2px 2px 0 #111" }}>
+                    {panels.panels[1].bubble}
+                  </div>
+                </div>
+
+                {/* Panel 3 — petit bas droite */}
+                <div style={{ position: "relative" }}>
+                  <img src={panels.panels[2].image} alt="Panel 3" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", border: "2px solid #111" }} />
+                  <div style={{ position: "absolute", bottom: "6px", right: "6px", background: "#FFD700", border: "2px solid #111", borderRadius: "10px", padding: "4px 8px", fontFamily: "'Bangers', cursive", fontSize: "11px", maxWidth: "110px", boxShadow: "2px 2px 0 #111" }}>
+                    {panels.panels[2].bubble}
+                  </div>
+                </div>
+
+                {/* Panel 4 — petit gauche */}
+                <div style={{ position: "relative" }}>
+                  <img src={panels.panels[3].image} alt="Panel 4" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", border: "2px solid #111" }} />
+                  <div style={{ position: "absolute", top: "6px", left: "6px", background: "white", border: "2px solid #111", borderRadius: "10px", padding: "4px 8px", fontFamily: "'Bangers', cursive", fontSize: "11px", maxWidth: "110px", boxShadow: "2px 2px 0 #111" }}>
+                    {panels.panels[3].bubble}
+                  </div>
+                </div>
+
+                {/* Panel 5 — grand droite */}
+                <div style={{ position: "relative" }}>
+                  <img src={panels.panels[4].image} alt="Panel 5" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", border: "2px solid #111" }} />
+                  <div style={{ position: "absolute", top: "6px", right: "6px", background: "#FF3A3A", border: "2px solid #111", borderRadius: "10px", padding: "4px 8px", fontFamily: "'Bangers', cursive", fontSize: "13px", color: "white", maxWidth: "120px", boxShadow: "2px 2px 0 #111" }}>
+                    {panels.panels[4].bubble}
+                  </div>
+                </div>
+
+                {/* Panel 6 — pleine largeur */}
+                <div style={{ position: "relative", gridColumn: "1 / -1" }}>
+                  <img src={panels.panels[5].image} alt="Panel 6" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", border: "2px solid #111" }} />
+                  <div style={{ position: "absolute", bottom: "10px", right: "10px", background: "white", border: "2px solid #111", borderRadius: "12px", padding: "6px 12px", fontFamily: "'Bangers', cursive", fontSize: "14px", maxWidth: "200px", textAlign: "center", boxShadow: "2px 2px 0 #111" }}>
+                    {panels.panels[5].bubble}
+                  </div>
+                </div>
+
               </div>
             </div>
-            <span style={{ fontSize: "13px", fontWeight: "700", color: "#888" }}>3/3 available today</span>
-          </div>
-        </section>
+            <div style={{ display: "flex", gap: "12px", marginTop: "16px", justifyContent: "center" }}>
+              <button className="btn" style={{ background: "#FFD700", border: "3px solid #111", borderRadius: "6px", padding: "12px 24px", fontFamily: "'Bangers', cursive", fontSize: "18px", letterSpacing: "1px", color: "#111", cursor: "pointer", boxShadow: "4px 4px 0 #111", transition: "all 0.1s" }}>
+                📤 SHARE
+              </button>
+              <button className="btn" onClick={handleGenerate} style={{ background: "white", border: "3px solid #111", borderRadius: "6px", padding: "12px 24px", fontFamily: "'Bangers', cursive", fontSize: "18px", letterSpacing: "1px", color: "#111", cursor: "pointer", boxShadow: "4px 4px 0 #111", transition: "all 0.1s" }}>
+                🔄 REGENERATE
+              </button>
+            </div>
+          </section>
+        )}
 
         {/* FEATURES */}
         <div style={{ textAlign: "center", marginBottom: "24px" }}>
@@ -131,8 +223,8 @@ export default function Home() {
         <section style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "56px" }}>
           {[
             { icon: "🎨", title: "3 Unique Styles", desc: "Japanese Manga, US Comics or minimalist Stick Figure." },
-            { icon: "📖", title: "3-Panel Format", desc: "Before / During / After — a real narrative mini-story." },
-            { icon: "🚀", title: "10 Seconds Flat", desc: "Describe, generate, share. That's it." },
+            { icon: "📖", title: "6-Panel Format", desc: "A full narrative arc — intro, action, climax and resolution." },
+            { icon: "🚀", title: "15 Seconds Flat", desc: "Describe, generate, share. That's it." },
           ].map((f, i) => (
             <div key={i} className="feature-card" style={{ border: "3px solid #111", borderRadius: "6px", padding: "20px 16px", background: "white", boxShadow: "4px 4px 0 #111", textAlign: "center", transition: "all 0.15s" }}>
               <span style={{ fontSize: "28px", marginBottom: "10px", display: "block" }}>{f.icon}</span>
@@ -160,7 +252,7 @@ export default function Home() {
               <ul style={{ listStyle: "none", textAlign: "left", fontSize: "13px", fontWeight: "700", color: "#444", lineHeight: "2" }}>
                 {p.features.map((f, j) => <li key={j}>✓ {f}</li>)}
               </ul>
-              <button className="generate-btn" style={{ width: "100%", marginTop: "16px", background: p.featured ? "#111" : "#FFD700", color: p.featured ? "#FFD700" : "#111", border: "3px solid #111", borderRadius: "6px", padding: "10px", fontFamily: "'Bangers', cursive", fontSize: "16px", letterSpacing: "1px", cursor: "pointer", boxShadow: "3px 3px 0 #111", transition: "all 0.1s" }}>
+              <button className="btn" style={{ width: "100%", marginTop: "16px", background: p.featured ? "#111" : "#FFD700", color: p.featured ? "#FFD700" : "#111", border: "3px solid #111", borderRadius: "6px", padding: "10px", fontFamily: "'Bangers', cursive", fontSize: "16px", letterSpacing: "1px", cursor: "pointer", boxShadow: "3px 3px 0 #111", transition: "all 0.1s" }}>
                 GET STARTED →
               </button>
             </div>
